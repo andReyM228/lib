@@ -9,6 +9,7 @@ const (
 	tokenName = "Authorization"
 )
 
+// Respond - helper for create response
 func Respond(ctx *fiber.Ctx, statusCode int, payload interface{}) error {
 	ctx.Response().SetStatusCode(statusCode)
 
