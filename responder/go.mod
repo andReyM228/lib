@@ -2,12 +2,14 @@ module github.com/andReyM228/lib/responder
 
 go 1.19
 
-require github.com/andReyM228/lib/errs v1.0.0
+require (
+	github.com/andReyM228/lib/errs v1.0.0
+	github.com/gofiber/fiber/v2 v2.46.0
+)
 
 require (
 	github.com/andybalholm/brotli v1.0.5 // indirect
 	github.com/go-telegram-bot-api/telegram-bot-api/v5 v5.5.1 // indirect
-	github.com/gofiber/fiber/v2 v2.46.0 // indirect
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/klauspost/compress v1.16.3 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
