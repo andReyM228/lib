@@ -53,28 +53,28 @@ func (e UnauthorizedError) Error() string {
 
 func HandleError(err error, log *logrus.Logger, tgbot *tgbotapi.BotAPI, chatID int64) {
 	switch err.(type) {
-	case *NotFoundError:
+	case NotFoundError:
 		log.Debug(err)
 
 		_, err := tgbot.Send(tgbotapi.NewMessage(chatID, err.Error()))
 		if err != nil {
 			log.Error(err)
 		}
-	case *BadRequestError:
+	case BadRequestError:
 		log.Debug(err)
 
 		_, err := tgbot.Send(tgbotapi.NewMessage(chatID, err.Error()))
 		if err != nil {
 			log.Error(err)
 		}
-	case *ForbiddenError:
+	case ForbiddenError:
 		log.Debug(err)
 
 		_, err := tgbot.Send(tgbotapi.NewMessage(chatID, "вам это запрещено"))
 		if err != nil {
 			log.Error(err)
 		}
-	case *UnauthorizedError:
+	case UnauthorizedError:
 		log.Debug(err)
 
 		_, err := tgbot.Send(tgbotapi.NewMessage(chatID, "неуспешная авторизация"))
