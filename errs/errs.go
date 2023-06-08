@@ -2,8 +2,8 @@ package errs
 
 import (
 	"fmt"
+	"github.com/andReyM228/lib/log"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
-	"github.com/sirupsen/logrus"
 )
 
 type TgError struct {
@@ -51,38 +51,38 @@ func (e UnauthorizedError) Error() string {
 	return fmt.Sprintf("forbidden: %s", e.Cause)
 }
 
-func HandleError(err error, log *logrus.Logger, tgbot *tgbotapi.BotAPI, chatID int64) {
+func HandleError(err error, log log.Logger, tgbot *tgbotapi.BotAPI, chatID int64) {
 	switch err.(type) {
 	case NotFoundError:
-		log.Debug(err)
+		log.Debug(err.Error())
 
 		_, err := tgbot.Send(tgbotapi.NewMessage(chatID, err.Error()))
 		if err != nil {
-			log.Error(err)
+			log.Error(err.Error())
 		}
 	case BadRequestError:
-		log.Debug(err)
+		log.Debug(err.Error())
 
 		_, err := tgbot.Send(tgbotapi.NewMessage(chatID, err.Error()))
 		if err != nil {
-			log.Error(err)
+			log.Error(err.Error())
 		}
 	case ForbiddenError:
-		log.Debug(err)
+		log.Debug(err.Error())
 
 		_, err := tgbot.Send(tgbotapi.NewMessage(chatID, "вам это запрещено"))
 		if err != nil {
-			log.Error(err)
+			log.Error(err.Error())
 		}
 	case UnauthorizedError:
-		log.Debug(err)
+		log.Debug(err.Error())
 
 		_, err := tgbot.Send(tgbotapi.NewMessage(chatID, "неуспешная авторизация"))
 		if err != nil {
-			log.Error(err)
+			log.Error(err.Error())
 		}
 	default:
-		log.Error(err)
+		log.Error(err.Error())
 
 		if chatID == 0 {
 			return
@@ -90,7 +90,7 @@ func HandleError(err error, log *logrus.Logger, tgbot *tgbotapi.BotAPI, chatID i
 
 		_, err := tgbot.Send(tgbotapi.NewMessage(chatID, "что-то пошло не так"))
 		if err != nil {
-			log.Error(err)
+			log.Error(err.Error())
 		}
 	}
 }
