@@ -2,10 +2,9 @@ package gpt3
 
 import "testing"
 
-func Test_getCompletion(t *testing.T) {
+func Test_gpt3_GetCompletion(t *testing.T) {
 	type args struct {
-		prompt string
-		apiKey string
+		text string
 	}
 	tests := []struct {
 		name    string
@@ -14,10 +13,9 @@ func Test_getCompletion(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name: "test_1",
+			name: "",
 			args: args{
-				prompt: "Hello,",
-				apiKey: "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",
+				text: "2+2?",
 			},
 			want:    "",
 			wantErr: false,
@@ -25,13 +23,14 @@ func Test_getCompletion(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := getCompletion(tt.args.prompt, tt.args.apiKey)
+			g := Init("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", "gpt-3.5-turbo")
+			got, err := g.GetCompletion(tt.args.text)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("getCompletion() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("GetCompletion() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if got != tt.want {
-				t.Errorf("getCompletion() got = %v, want %v", got, tt.want)
+				t.Errorf("GetCompletion() got = %v, want %v", got, tt.want)
 			}
 		})
 	}

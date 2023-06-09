@@ -8,28 +8,35 @@ import (
 	"net/http"
 )
 
-func getCompletion(prompt string, apiKey string) (string, error) {
-	url := "https://api.openai.com/v1/engines/davinci-codex/completions"
+type gpt3 struct {
+	apiKey string
+	model  string
+}
 
-	data := map[string]interface{}{
-		"prompt":     prompt,
-		"max_tokens": 10,
+func Init(apiKey, model string) ChatGPT {
+	return gpt3{
+		apiKey: apiKey,
+		model:  model,
 	}
+}
 
-	jsonData, err := json.Marshal(data)
-	if err != nil {
-		return "", fmt.Errorf("Error encoding JSON: %v", err)
-	}
+func (g gpt3) GetCompletion(text string) (string, error) {
+	url := "https://api.openai.com/v1/chat/completions"
 
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonData))
+	data := fmt.Sprintf(`{
+    	"model": "%s",
+    	"messages": [{"role": "user", "content": "%s"}]
+	}`, g.model, text)
+
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer([]byte(data)))
 	if err != nil {
 		return "", fmt.Errorf("Error creating request: %v", err)
 	}
 
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", apiKey))
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", g.apiKey))
 
-	client := &http.Client{}
+	client := http.DefaultClient
 	resp, err := client.Do(req)
 	if err != nil {
 		return "", fmt.Errorf("Error sending request: %v", err)
@@ -41,7 +48,7 @@ func getCompletion(prompt string, apiKey string) (string, error) {
 		return "", fmt.Errorf("Error reading response body: %v", err)
 	}
 
-	var result map[string]interface{}
+	var result chatResponse
 	err = json.Unmarshal(responseBody, &result)
 	if err != nil {
 		return "", fmt.Errorf("Error decoding response JSON: %v", err)
@@ -51,26 +58,9 @@ func getCompletion(prompt string, apiKey string) (string, error) {
 		return "", fmt.Errorf("Request failed with status code %d: %s", resp.StatusCode, responseBody)
 	}
 
-	if output, ok := result["choices"].([]interface{}); ok && len(output) > 0 {
-		if choice, ok := output[0].(map[string]interface{}); ok {
-			if text, ok := choice["text"].(string); ok {
-				return text, nil
-			}
-		}
+	if len(result.Choices) == 0 {
+		return "", fmt.Errorf("Error")
 	}
 
-	return "", fmt.Errorf("Unexpected response format: %s", responseBody)
-}
-
-func main() {
-	prompt := "Hello,"
-	apiKey := "YOUR_API_KEY"
-
-	response, err := getCompletion(prompt, apiKey)
-	if err != nil {
-		fmt.Println("Error:", err)
-		return
-	}
-
-	fmt.Println(response)
+	return result.Choices[0].Message.Content, nil
 }
