@@ -15,7 +15,7 @@ func Test_gpt3_GetCompletion(t *testing.T) {
 		{
 			name: "",
 			args: args{
-				text: "2+2?",
+				text: "опиши мне главные характеристики машины bmw i8 в виде одного json на английском",
 			},
 			want:    "",
 			wantErr: false,
@@ -23,7 +23,7 @@ func Test_gpt3_GetCompletion(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			g := Init("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", "gpt-3.5-turbo")
+			g := Init("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", "gpt-3.5-turbo")
 			got, err := g.GetCompletion(tt.args.text)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetCompletion() error = %v, wantErr %v", err, tt.wantErr)

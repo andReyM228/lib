@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+
+	_ "github.com/andReyM228/lib/errs"
 )
 
 type gpt3 struct {
