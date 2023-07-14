@@ -67,3 +67,27 @@ func VerifyToken(tokenString string, chatID ...int64) error {
 
 	return nil
 }
+
+func GetChatID(tokenString string) (int64, error) {
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
+		}
+
+		return []byte(secret), nil
+	})
+
+	if err != nil {
+		fmt.Println("Error while verifying token:", err)
+		return 0, err
+	}
+
+	// Получаем поля токена
+	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+		sub := claims["sub"].(float64)
+
+		return int64(sub), nil
+	} else {
+		return 0, errors.New("invalid token")
+	}
+}
