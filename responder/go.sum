@@ -1,5 +1,7 @@
-github.com/andReyM228/lib/errs v1.0.0 h1:4g7lwvbvOlnnjXUu653/rb0mNPToLMyTycaMaj34eNA=
-github.com/andReyM228/lib/errs v1.0.0/go.mod h1:Blpyt7ldn3WPmsjygBuKe2CWNfYSp6++n3T8J5rLib8=
+github.com/andReyM228/lib/errs v1.0.5 h1:S8JZr0GufaIGGYLLa2/DC6fChpVs0iO2/mfwozhxeyA=
+github.com/andReyM228/lib/errs v1.0.5/go.mod h1:Blpyt7ldn3WPmsjygBuKe2CWNfYSp6++n3T8J5rLib8=
+github.com/andReyM228/lib/log v0.0.0-20230714155438-4d44957c3573 h1:r6oeqkyyKahmCCbwsP0vfcnbFVQ2kaQ7TpxlquNXpPA=
+github.com/andReyM228/lib/log v0.0.0-20230714155438-4d44957c3573/go.mod h1:B57HbHEgpkwENwn2Hhl7lyMu8MIbFmw7O1tR2ZSo0vA=
 github.com/andybalholm/brotli v1.0.5 h1:8uQZIdzKmjc/iuPu7O2ioW48L81FgatrcpfFmiq/cCs=
 github.com/andybalholm/brotli v1.0.5/go.mod h1:fO7iG3H7G2nSZ7m0zPUDn85XEX2GTukHGRSepvi9Eig=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=

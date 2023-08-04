@@ -3,11 +3,12 @@ module github.com/andReyM228/lib/responder
 go 1.19
 
 require (
-	github.com/andReyM228/lib/errs v1.0.0
+	github.com/andReyM228/lib/errs v1.0.5
 	github.com/gofiber/fiber/v2 v2.46.0
 )
 
 require (
+	github.com/andReyM228/lib/log v0.0.0-20230714155438-4d44957c3573 // indirect
 	github.com/andybalholm/brotli v1.0.5 // indirect
 	github.com/go-telegram-bot-api/telegram-bot-api/v5 v5.5.1 // indirect
 	github.com/google/uuid v1.3.0 // indirect
