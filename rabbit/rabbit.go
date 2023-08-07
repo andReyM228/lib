@@ -1,4 +1,4 @@
-package main
+package rabbit
 
 import (
 	"encoding/json"
@@ -19,7 +19,10 @@ func NewRabbitMQ(url string) (*RabbitMQ, error) {
 
 	ch, err := conn.Channel()
 	if err != nil {
-		conn.Close()
+		err := conn.Close()
+		if err != nil {
+			return nil, err
+		}
 		return nil, err
 	}
 
