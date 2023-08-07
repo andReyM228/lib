@@ -11,7 +11,7 @@ type RabbitMQ struct {
 	ch   *amqp.Channel
 }
 
-func NewRabbitMQ(url string) (*RabbitMQ, error) {
+func (r *RabbitMQ) NewRabbitMQ(url string) (*RabbitMQ, error) {
 	conn, err := amqp.Dial(url)
 	if err != nil {
 		return nil, err
