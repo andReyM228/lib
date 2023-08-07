@@ -11,22 +11,21 @@ type RabbitMQ struct {
 	ch   *amqp.Channel
 }
 
-func (r *RabbitMQ) NewRabbitMQ(url string) (*RabbitMQ, error) {
+func (r *RabbitMQ) NewRabbitMQ(url string) error {
 	conn, err := amqp.Dial(url)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	ch, err := conn.Channel()
 	if err != nil {
-		err := conn.Close()
-		if err != nil {
-			return nil, err
-		}
-		return nil, err
+		conn.Close()
+		return err
 	}
 
-	return &RabbitMQ{conn: conn, ch: ch}, nil
+	ch.Close()
+	conn.Close()
+	return nil
 }
 
 func (r *RabbitMQ) Publish(queueName string, message interface{}) error {
