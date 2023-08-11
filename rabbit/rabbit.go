@@ -87,9 +87,14 @@ func (r rabbitMQ) Request(queueName string, message interface{}) (ResponseModel,
 }
 
 func (r rabbitMQ) Reply(queueName string, statusCode int64, message interface{}) error {
-	payload, err := json.Marshal(message)
-	if err != nil {
-		return err
+	var payload json.RawMessage
+	var err error
+
+	if message != nil {
+		payload, err = json.Marshal(message)
+		if err != nil {
+			return err
+		}
 	}
 
 	request := ResponseModel{
