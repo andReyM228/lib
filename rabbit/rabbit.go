@@ -5,6 +5,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/streadway/amqp"
 	"log"
+	"sync"
 )
 
 type rabbitMQ struct {
@@ -210,11 +211,17 @@ func (r rabbitMQ) ConsumeWithResponse(queueName string) ([]byte, error) {
 
 	var result []byte
 
+	var wg sync.WaitGroup
+	wg.Add(1)
+
 	go func() {
+		defer wg.Done()
 		for msg := range msgs {
 			result = msg.Body
 		}
 	}()
+
+	wg.Wait()
 
 	return result, nil
 }
