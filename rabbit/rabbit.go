@@ -2,6 +2,7 @@ package rabbit
 
 import (
 	"encoding/json"
+	"github.com/google/uuid"
 	"github.com/streadway/amqp"
 	"log"
 )
@@ -9,6 +10,16 @@ import (
 type rabbitMQ struct {
 	conn *amqp.Connection
 	ch   *amqp.Channel
+}
+
+type RequestModel struct {
+	ReplyTopic string
+	Payload    json.RawMessage
+}
+
+type ResponseModel struct {
+	StatusCode int64
+	Payload    json.RawMessage
 }
 
 func (r rabbitMQ) CloseConnection() error {
@@ -40,6 +51,58 @@ func NewRabbitMQ(url string) (Rabbit, error) {
 		conn: conn,
 		ch:   ch,
 	}, err
+}
+
+func (r rabbitMQ) Request(queueName string, message interface{}) (ResponseModel, error) {
+	replyTopic := uuid.New().String()
+
+	payload, err := json.Marshal(message)
+	if err != nil {
+		return ResponseModel{}, err
+	}
+
+	request := RequestModel{
+		ReplyTopic: replyTopic,
+		Payload:    payload,
+	}
+
+	err = r.Publish(queueName, request)
+	if err != nil {
+		return ResponseModel{}, err
+	}
+
+	result, err := r.ConsumeWithResponse(queueName)
+	if err != nil {
+		return ResponseModel{}, err
+	}
+
+	var resp ResponseModel
+
+	err = json.Unmarshal(result, &resp)
+	if err != nil {
+		return ResponseModel{}, err
+	}
+
+	return resp, nil
+}
+
+func (r rabbitMQ) Reply(queueName string, statusCode int64, message interface{}) error {
+	payload, err := json.Marshal(message)
+	if err != nil {
+		return err
+	}
+
+	request := ResponseModel{
+		StatusCode: statusCode,
+		Payload:    payload,
+	}
+
+	err = r.Publish(queueName, request)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (r rabbitMQ) Publish(queueName string, message interface{}) error {
@@ -112,4 +175,41 @@ func (r rabbitMQ) Consume(queueName string, handler func([]byte) error) error {
 	}()
 
 	return nil
+}
+
+func (r rabbitMQ) ConsumeWithResponse(queueName string) ([]byte, error) {
+	queue, err := r.ch.QueueDeclare(
+		queueName,
+		false,
+		false,
+		false,
+		false,
+		nil,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	msgs, err := r.ch.Consume(
+		queue.Name,
+		"",
+		true,
+		false,
+		false,
+		false,
+		nil,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	var result []byte
+
+	go func() {
+		for msg := range msgs {
+			result = msg.Body
+		}
+	}()
+
+	return result, nil
 }
