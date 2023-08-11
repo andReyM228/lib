@@ -6,29 +6,43 @@ import (
 	"log"
 )
 
-type RabbitMQ struct {
+type rabbitMQ struct {
 	conn *amqp.Connection
 	ch   *amqp.Channel
 }
 
-func (r *RabbitMQ) NewRabbitMQ(url string) error {
-	conn, err := amqp.Dial(url)
+func (r rabbitMQ) CloseConnection() error {
+	err := r.conn.Close()
 	if err != nil {
 		return err
+	}
+
+	err = r.ch.Close()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func NewRabbitMQ(url string) (Rabbit, error) {
+	conn, err := amqp.Dial(url)
+	if err != nil {
+		return rabbitMQ{}, err
 	}
 
 	ch, err := conn.Channel()
 	if err != nil {
-		conn.Close()
-		return err
+		return rabbitMQ{}, err
 	}
 
-	ch.Close()
-	conn.Close()
-	return nil
+	return rabbitMQ{
+		conn: conn,
+		ch:   ch,
+	}, err
 }
 
-func (r *RabbitMQ) Publish(queueName string, message interface{}) error {
+func (r rabbitMQ) Publish(queueName string, message interface{}) error {
 	queue, err := r.ch.QueueDeclare(
 		queueName,
 		false,
@@ -63,7 +77,7 @@ func (r *RabbitMQ) Publish(queueName string, message interface{}) error {
 	return nil
 }
 
-func (r *RabbitMQ) Consume(queueName string, handler func([]byte) error) error {
+func (r rabbitMQ) Consume(queueName string, handler func([]byte) error) error {
 	queue, err := r.ch.QueueDeclare(
 		queueName,
 		false,

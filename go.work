@@ -7,4 +7,5 @@ use (
 	log
 	gpt3
 	sheets
+	rabbit
 )
