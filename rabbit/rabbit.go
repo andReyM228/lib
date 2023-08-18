@@ -231,13 +231,14 @@ func (r rabbitMQ) ConsumeWithResponse(queueName string) ([]byte, error) {
 
 	go func(wg *sync.WaitGroup) {
 		wg.Add(1)
-		defer wg.Done()
 
 		log.Println("start listening msgs")
 
 		for msg := range msgs {
 			result = msg.Body
 			log.Println("got result from msgs")
+
+			wg.Done()
 		}
 	}(&wg)
 	//***
