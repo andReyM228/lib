@@ -229,7 +229,7 @@ func (r rabbitMQ) ConsumeWithResponse(queueName string) ([]byte, error) {
 
 	var wg sync.WaitGroup
 
-	go func() {
+	go func(wg *sync.WaitGroup) {
 		wg.Add(1)
 		defer wg.Done()
 
@@ -239,7 +239,7 @@ func (r rabbitMQ) ConsumeWithResponse(queueName string) ([]byte, error) {
 			result = msg.Body
 			log.Println("got result from msgs")
 		}
-	}()
+	}(&wg)
 	//***
 	wg.Wait()
 
