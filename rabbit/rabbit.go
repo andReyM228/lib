@@ -2,6 +2,7 @@ package rabbit
 
 import (
 	"encoding/json"
+	"github.com/andReyM228/lib/errs"
 	"github.com/google/uuid"
 	"github.com/streadway/amqp"
 	"log"
@@ -72,9 +73,13 @@ func (r rabbitMQ) Request(queueName string, message interface{}) (ResponseModel,
 		return ResponseModel{}, err
 	}
 
-	result, err := r.ConsumeWithResponse(queueName)
+	result, err := r.ConsumeWithResponse(replyTopic)
 	if err != nil {
 		return ResponseModel{}, err
+	}
+
+	if result == nil {
+		return ResponseModel{}, errs.InternalError{}
 	}
 
 	var resp ResponseModel
