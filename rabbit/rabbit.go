@@ -56,6 +56,8 @@ func NewRabbitMQ(url string) (Rabbit, error) {
 }
 
 func (r rabbitMQ) Request(queueName string, message interface{}) (ResponseModel, error) {
+	log.Printf("start request to %s", queueName)
+
 	replyTopic := uuid.New().String()
 
 	payload, err := json.Marshal(message)
@@ -73,21 +75,28 @@ func (r rabbitMQ) Request(queueName string, message interface{}) (ResponseModel,
 		return ResponseModel{}, err
 	}
 
+	log.Println("request send")
+
 	result, err := r.ConsumeWithResponse(replyTopic)
 	if err != nil {
 		return ResponseModel{}, err
 	}
 
 	if result == nil {
+		log.Println("result is nil")
 		return ResponseModel{}, errs.InternalError{}
 	}
 
 	var resp ResponseModel
 
+	log.Println("start unmarshalling payload")
+
 	err = json.Unmarshal(result, &resp)
 	if err != nil {
 		return ResponseModel{}, err
 	}
+
+	log.Println("return response")
 
 	return resp, nil
 }
@@ -216,14 +225,19 @@ func (r rabbitMQ) ConsumeWithResponse(queueName string) ([]byte, error) {
 
 	var result []byte
 
+	log.Println("start listening replyTopic")
+
 	var wg sync.WaitGroup
 
 	go func() {
 		wg.Add(1)
 		defer wg.Done()
 
+		log.Println("start listening msgs")
+
 		for msg := range msgs {
 			result = msg.Body
+			log.Println("got result from msgs")
 		}
 	}()
 	//***
