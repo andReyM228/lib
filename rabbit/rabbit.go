@@ -229,9 +229,9 @@ func (r rabbitMQ) ConsumeWithResponse(queueName string) ([]byte, error) {
 
 	var wg sync.WaitGroup
 
-	go func(wg *sync.WaitGroup) {
-		wg.Add(1)
+	wg.Add(1)
 
+	go func(wg *sync.WaitGroup) {
 		log.Println("start listening msgs")
 
 		for msg := range msgs {
