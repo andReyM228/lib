@@ -212,15 +212,16 @@ func (r rabbitMQ) ConsumeWithResponse(queueName string) ([]byte, error) {
 	var result []byte
 
 	var wg sync.WaitGroup
-	wg.Add(1)
 
 	go func() {
+		wg.Add(1)
 		defer wg.Done()
+
 		for msg := range msgs {
 			result = msg.Body
 		}
 	}()
-
+	//***
 	wg.Wait()
 
 	return result, nil
