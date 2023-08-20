@@ -246,3 +246,41 @@ func (r rabbitMQ) ConsumeWithResponse(queueName string) ([]byte, error) {
 
 	return result, nil
 }
+
+func (r rabbitMQ) PreparePublish(queueName string, message interface{}) error {
+	queue, err := r.ch.QueueDeclare(
+		queueName,
+		false,
+		false,
+		false,
+		false,
+		nil,
+	)
+	if err != nil {
+		return err
+	}
+
+	body, err := json.Marshal(message)
+	if err != nil {
+		return err
+	}
+
+	err = r.ch.Publish(
+		"",
+		queue.Name,
+		false,
+		false,
+		amqp.Publishing{
+			ContentType: "application/json",
+			Headers: amqp.Table{
+				"action": "prepare",
+			},
+			Body: body,
+		},
+	)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
