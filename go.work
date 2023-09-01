@@ -8,4 +8,5 @@ use (
 	gpt3
 	sheets
 	rabbit
+	bus
 )
