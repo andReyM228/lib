@@ -1,4 +1,4 @@
-module db
+module github.com/andReyM228/lib/database
 
 go 1.20
 
