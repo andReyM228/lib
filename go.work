@@ -1,12 +1,14 @@
-go 1.19
+go 1.21.5
 
 use (
 	auth
-	errs
-	responder
-	log
-	gpt3
-	sheets
-	rabbit
 	bus
+	database
+	errs
+	gpt3
+	log
+	rabbit
+	responder
+	sheets
+	discord
 )
