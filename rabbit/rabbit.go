@@ -3,15 +3,16 @@ package rabbit
 import (
 	"encoding/json"
 	"github.com/andReyM228/lib/errs"
+	"github.com/andReyM228/lib/log"
 	"github.com/google/uuid"
 	"github.com/streadway/amqp"
-	"log"
 	"sync"
 )
 
 type rabbitMQ struct {
 	conn *amqp.Connection
 	ch   *amqp.Channel
+	log  log.Logger
 }
 
 type RequestModel struct {
@@ -38,7 +39,7 @@ func (r rabbitMQ) CloseConnection() error {
 	return nil
 }
 
-func NewRabbitMQ(url string) (Rabbit, error) {
+func NewRabbitMQ(url string, log log.Logger) (Rabbit, error) {
 	conn, err := amqp.Dial(url)
 	if err != nil {
 		return rabbitMQ{}, err
@@ -52,11 +53,12 @@ func NewRabbitMQ(url string) (Rabbit, error) {
 	return rabbitMQ{
 		conn: conn,
 		ch:   ch,
+		log:  log,
 	}, err
 }
 
 func (r rabbitMQ) Request(queueName string, message interface{}) (ResponseModel, error) {
-	log.Printf("start request to %s", queueName)
+	r.log.Debugf("start request to %s", queueName)
 
 	replyTopic := uuid.New().String()
 
@@ -75,7 +77,7 @@ func (r rabbitMQ) Request(queueName string, message interface{}) (ResponseModel,
 		return ResponseModel{}, err
 	}
 
-	log.Println("request send")
+	r.log.Debugf("request send")
 
 	result, err := r.ConsumeWithResponse(replyTopic)
 	if err != nil {
@@ -83,20 +85,20 @@ func (r rabbitMQ) Request(queueName string, message interface{}) (ResponseModel,
 	}
 
 	if result == nil {
-		log.Println("result is nil")
+		r.log.Debugf("result is nil")
 		return ResponseModel{}, errs.InternalError{}
 	}
 
 	var resp ResponseModel
 
-	log.Println("start unmarshalling payload")
+	r.log.Debugf("start unmarshalling payload")
 
 	err = json.Unmarshal(result, &resp)
 	if err != nil {
 		return ResponseModel{}, err
 	}
 
-	log.Println("return response")
+	r.log.Debugf("return response")
 
 	return resp, nil
 }
@@ -161,37 +163,39 @@ func (r rabbitMQ) Publish(queueName string, message interface{}) error {
 }
 
 func (r rabbitMQ) Consume(queueName string, handler func([]byte) error) error {
-	queue, err := r.ch.QueueDeclare(
-		queueName,
-		false,
-		false,
-		false,
-		false,
-		nil,
-	)
-	if err != nil {
-		return err
-	}
-
-	msgs, err := r.ch.Consume(
-		queue.Name,
-		"",
-		true,
-		false,
-		false,
-		false,
-		nil,
-	)
-	if err != nil {
-		return err
-	}
-
 	go func() {
-		for msg := range msgs {
-			if err := handler(msg.Body); err != nil {
-				log.Printf("Failed to process message: %v", err)
-			}
+		queue, err := r.ch.QueueDeclare(
+			queueName,
+			false,
+			false,
+			false,
+			false,
+			nil,
+		)
+		if err != nil {
+
 		}
+
+		msgs, err := r.ch.Consume(
+			queue.Name,
+			"",
+			true,
+			false,
+			false,
+			false,
+			nil,
+		)
+		if err != nil {
+			r.log.Fatalf("Failed to register a consumer: %v", err)
+		}
+
+		go func() {
+			for msg := range msgs {
+				if err := handler(msg.Body); err != nil {
+					r.log.Errorf("Failed to process message: %v", err)
+				}
+			}
+		}()
 	}()
 
 	return nil
@@ -225,18 +229,18 @@ func (r rabbitMQ) ConsumeWithResponse(queueName string) ([]byte, error) {
 
 	var result []byte
 
-	log.Println("start listening replyTopic")
+	r.log.Debugf("start listening replyTopic")
 
 	var wg sync.WaitGroup
 
 	wg.Add(1)
 
 	go func(wg *sync.WaitGroup) {
-		log.Println("start listening msgs")
+		r.log.Debugf("start listening msgs")
 
 		for msg := range msgs {
 			result = msg.Body
-			log.Println("got result from msgs")
+			r.log.Debugf("got result from msgs")
 
 			wg.Done()
 		}
