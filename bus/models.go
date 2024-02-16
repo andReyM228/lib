@@ -18,4 +18,20 @@ type (
 		ID    int64  `json:"id"`
 		Token string `json:"token"`
 	}
+
+	IssueRequest struct {
+		ToAddress string `json:"to_address" validate:"required"`
+		Amount    int64  `json:"amount" validate:"required"`
+		Memo      string `json:"memo" validate:"required"`
+	}
+
+	WithdrawRequest struct {
+		ToAddress string `json:"to_address" validate:"required"`
+		Amount    int64  `json:"amount" validate:"required"`
+		Memo      string `json:"memo" validate:"required"`
+	}
+
+	TxResponse struct {
+		TxHash string `json:"tx_hash"`
+	}
 )

@@ -9,6 +9,7 @@ const (
 )
 
 const (
-//tx-service
-
+	//tx-service
+	SubjectTxServiceIssue    = "subject.tx.service.issue"
+	SubjectTxServiceWithdraw = "subject.tx.service.withdraw"
 )
