@@ -33,7 +33,7 @@ func InitDatabase(log log.Logger, config DBConfig, fs embed.FS) *sqlx.DB {
 	}
 
 	if err := db.Ping(); err != nil {
-		db, err = createDataBase(log, config)
+		db, err = createDatabase(log, config)
 		if err != nil {
 			log.Fatal(err.Error())
 		}
@@ -50,7 +50,7 @@ func InitDatabase(log log.Logger, config DBConfig, fs embed.FS) *sqlx.DB {
 	return db
 }
 
-func createDataBase(log log.Logger, config DBConfig) (*sqlx.DB, error) {
+func createDatabase(log log.Logger, config DBConfig) (*sqlx.DB, error) {
 	log.Debug("opening database connection")
 
 	newDBName := config.DBName
