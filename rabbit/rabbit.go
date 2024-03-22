@@ -57,6 +57,8 @@ func NewRabbitMQ(url string, log log.Logger) (Rabbit, error) {
 	}, err
 }
 
+// TODO: чтоб передавался ctx
+
 func (r rabbitMQ) Request(queueName string, message interface{}) (ResponseModel, error) {
 	r.log.Debugf("start request to %s", queueName)
 

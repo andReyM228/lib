@@ -3,12 +3,17 @@ package auth
 import (
 	"errors"
 	"fmt"
+	"github.com/andReyM228/lib/errs"
 	"github.com/dgrijalva/jwt-go"
+	"github.com/gofiber/fiber/v2"
+	"strconv"
 	"time"
 )
 
 const (
-	secret = "nwciudamsdeqdincacm"
+	secret        = "nwciudamsdeqdincacm"
+	Authorization = "Authorization"
+	ChatIdHeader  = "h_chat_id"
 )
 
 func CreateToken(chatID, userID int64) (string, error) {
@@ -90,4 +95,44 @@ func GetChatID(tokenString string) (int64, error) {
 	} else {
 		return 0, errors.New("invalid token")
 	}
+}
+
+func AuthMiddleware(enabled bool) func(*fiber.Ctx) error {
+	return func(ctx *fiber.Ctx) error {
+		if !enabled {
+			return ctx.Next()
+		}
+
+		token := ctx.Get(Authorization)
+		if token == "" {
+			return errs.UnauthorizedError{Cause: "token"}
+		}
+
+		if err := VerifyToken(token); err != nil {
+			return errs.UnauthorizedError{Cause: err.Error()}
+		}
+
+		chatID, err := GetChatID(token)
+		if err != nil {
+			return errs.UnauthorizedError{Cause: err.Error()}
+		}
+
+		ctx.Request().Header.Add(ChatIdHeader, strconv.FormatInt(chatID, 10))
+
+		return ctx.Next()
+	}
+}
+
+func GetChatIDFromHeader(ctx *fiber.Ctx) (int64, error) {
+	chatID := ctx.Get(ChatIdHeader)
+	if chatID == "" {
+		return 0, errs.UnauthorizedError{Cause: "chatID"}
+	}
+
+	id, err := strconv.ParseInt(chatID, 10, 64)
+	if err != nil {
+		return 0, errs.UnauthorizedError{Cause: err.Error()}
+	}
+
+	return id, nil
 }

@@ -18,6 +18,8 @@ func Init() Logger {
 	}
 }
 
+// TODO: переписать логгер
+
 func (l log) Info(text string) {
 	l.logger.Println("INFO: ", text)
 }
