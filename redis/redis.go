@@ -11,7 +11,7 @@ type cache struct {
 }
 
 type Config struct {
-	Addr     string `yaml:"addr" validate:"required"`
+	Addr     string `yaml:"addr"`
 	Password string `yaml:"password"`
 	DB       int    `yaml:"db"`
 }
