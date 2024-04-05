@@ -12,8 +12,8 @@ type cache struct {
 
 type Config struct {
 	Addr     string `yaml:"addr" validate:"required"`
-	Password string `yaml:"password" validate:"required"`
-	DB       int    `yaml:"db" validate:"required"`
+	Password string `yaml:"password"`
+	DB       int    `yaml:"db"`
 }
 
 func NewCache(cfg Config, log log.Logger) Redis {
