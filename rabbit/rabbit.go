@@ -1,6 +1,7 @@
 package rabbit
 
 import (
+	"context"
 	"encoding/json"
 	"github.com/andReyM228/lib/errs"
 	"github.com/andReyM228/lib/log"
@@ -164,43 +165,61 @@ func (r rabbitMQ) Publish(queueName string, message interface{}) error {
 	return nil
 }
 
-func (r rabbitMQ) Consume(queueName string, handler func([]byte) error) error {
+func (r rabbitMQ) Consume(ctx context.Context, queueName string, handler func([]byte) error) error {
+	queue, err := r.ch.QueueDeclare(
+		queueName,
+		false,
+		false,
+		false,
+		false,
+		nil,
+	)
+	if err != nil {
+		r.log.Fatalf("Failed to query declare: %v", err)
+	}
+
+	msgs, err := r.ch.Consume(
+		queue.Name,
+		"",
+		true,
+		false,
+		false,
+		false,
+		nil,
+	)
+	if err != nil {
+		r.log.Fatalf("Failed to register a consumer: %v", err)
+	}
+
 	go func() {
-		queue, err := r.ch.QueueDeclare(
-			queueName,
-			false,
-			false,
-			false,
-			false,
-			nil,
-		)
-		if err != nil {
-
-		}
-
-		msgs, err := r.ch.Consume(
-			queue.Name,
-			"",
-			true,
-			false,
-			false,
-			false,
-			nil,
-		)
-		if err != nil {
-			r.log.Fatalf("Failed to register a consumer: %v", err)
-		}
-
-		go func() {
-			for msg := range msgs {
-				if err := handler(msg.Body); err != nil {
-					r.log.Errorf("Failed to process message: %v", err)
-				}
+		for msg := range msgs {
+			if err := handler(msg.Body); err != nil {
+				r.log.Errorf("Failed to process message: %v", err)
 			}
-		}()
+		}
 	}()
 
 	return nil
+}
+
+func (r rabbitMQ) ConsumeAll(ctx context.Context, queues map[string]func([]byte) error) error {
+	for name, handler := range queues {
+		name := name
+		handler := handler
+		go func() {
+			err := r.Consume(ctx, name, handler)
+			if err != nil {
+				r.log.Fatalf("Error rabbit-mq consume: %v", err)
+			}
+		}()
+
+	}
+
+	return nil
+}
+
+func (r rabbitMQ) Close() error {
+	return r.ch.Close()
 }
 
 func (r rabbitMQ) ConsumeWithResponse(queueName string) ([]byte, error) {
