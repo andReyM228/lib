@@ -19,6 +19,12 @@ type (
 		Token string `json:"token"`
 	}
 
+	BuyCarRequest struct {
+		ChatID int64  `json:"chat_id"`
+		CarID  int64  `json:"car_id"`
+		TxHash string `json:"tx_hash"`
+	}
+
 	IssueRequest struct {
 		ToAddress string `json:"to_address" validate:"required"`
 		Amount    int64  `json:"amount" validate:"required"`
