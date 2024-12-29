@@ -5,9 +5,10 @@ import (
 	"errors"
 	"fmt"
 	"github.com/andReyM228/lib/log"
-	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 	migrate "github.com/rubenv/sql-migrate"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 )
 
 type DBConfig struct {
@@ -20,23 +21,13 @@ type DBConfig struct {
 	ConfigDirectory string `yaml:"config-directory"`
 }
 
-func InitDatabase(log log.Logger, config DBConfig, fs embed.FS) *sqlx.DB {
+func InitDatabase(log log.Logger, config DBConfig, fs embed.FS) *gorm.DB {
 	log.Debug("opening database connection")
 
-	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+
-		"password=%s dbname=%s sslmode=disable",
-		config.Host, config.Port, config.User, config.Password, config.DBName)
-
-	db, err := sqlx.Open("postgres", psqlInfo)
+	db, err := connect(config)
 	if err != nil {
-		log.Fatalf("open db: %v", err)
-	}
-
-	if err := db.Ping(); err != nil {
-		db, err = createDatabase(log, config)
-		if err != nil {
-			log.Fatal(err.Error())
-		}
+		log.Infof("main database connection failed: %s", err)
+		return nil
 	}
 
 	if config.AutoMigrate {
@@ -50,51 +41,28 @@ func InitDatabase(log log.Logger, config DBConfig, fs embed.FS) *sqlx.DB {
 	return db
 }
 
-func createDatabase(log log.Logger, config DBConfig) (*sqlx.DB, error) {
-	log.Debug("opening database connection")
-
-	newDBName := config.DBName
-
-	config.DBName = "postgres"
-
-	db, err := connect(config)
-	if err != nil {
-		return nil, errors.New(fmt.Sprintf("default db: %v", err))
-	}
-
-	_, err = db.Exec(fmt.Sprintf("CREATE DATABASE %s;", newDBName))
-	if err != nil {
-		return nil, errors.New(fmt.Sprintf("create new db: %v", err))
-	}
-
-	config.DBName = newDBName
-
-	db, err = connect(config)
-	if err != nil {
-		return nil, errors.New(fmt.Sprintf("new db: %v", err))
-	}
-
-	return db, nil
-}
-
-func connect(config DBConfig) (*sqlx.DB, error) {
-	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+
-		"password=%s dbname=%s sslmode=disable",
+func connect(config DBConfig) (*gorm.DB, error) {
+	dsn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
 		config.Host, config.Port, config.User, config.Password, config.DBName)
 
-	db, err := sqlx.Open("postgres", psqlInfo)
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
-		return nil, errors.New(fmt.Sprintf("open database: %v", err))
+		return nil, fmt.Errorf("failed to connect to database: %v", err)
 	}
 
-	if err := db.Ping(); err != nil {
-		return nil, errors.New(fmt.Sprintf("ping database: %v", err))
+	sqlDB, err := db.DB()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get sql.DB from gorm.DB: %v", err)
+	}
+
+	if err = sqlDB.Ping(); err != nil {
+		return nil, fmt.Errorf("ping database failed: %v", err)
 	}
 
 	return db, nil
 }
 
-func dbAutoMigrate(db *sqlx.DB, fs embed.FS, cfg DBConfig) (int, error) {
+func dbAutoMigrate(db *gorm.DB, fs embed.FS, cfg DBConfig) (int, error) {
 	migrate.SetTable("gorp_migrations")
 
 	migrations := migrate.EmbedFileSystemMigrationSource{
@@ -102,5 +70,10 @@ func dbAutoMigrate(db *sqlx.DB, fs embed.FS, cfg DBConfig) (int, error) {
 		Root:       cfg.ConfigDirectory,
 	}
 
-	return migrate.Exec(db.DB, "postgres", migrations, migrate.Up)
+	dbSql, err := db.DB()
+	if err != nil {
+		return 0, errors.New(fmt.Sprintf("convert database: %v", err))
+	}
+
+	return migrate.Exec(dbSql, "postgres", migrations, migrate.Up)
 }
